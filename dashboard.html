@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Sanjeevani Smart-Shield Dashboard — Manage your profile and view emergency alerts."/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="stylesheet" href="assets/css/main.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <title>Dashboard — Sanjeevani Smart-Shield</title>
+  <style>
+    .sidebar {
+      position: sticky;
+      top: 90px;
+      width: 260px;
+      flex-shrink: 0;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+    .sidebar-item.active { background: rgba(0,212,170,0.1); color: var(--teal); font-weight: 600; }
+    .sidebar-item .icon { font-size: 1.1rem; }
+
+    .metric-card {
+      padding: 24px;
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    .metric-card:hover { border-color: var(--border-h); transform: translateY(-2px); }
+
+    .scan-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      transition: var(--transition);
+    }
+    .scan-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(0,212,170,0.2); }
+
+    .mini-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+    }
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--teal), var(--teal-dark));
+      transition: width 1s ease;
+    }
+
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .plan-free    { background: rgba(255,255,255,0.06); color: var(--text-secondary); border: 1px solid var(--border); }
+    .plan-pro     { background: rgba(0,212,170,0.12); color: var(--teal); border: 1px solid rgba(0,212,170,0.3); }
+    .plan-fleet   { background: rgba(255,215,0,0.12); color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
+
+    .mini-heatmap {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 3px;
+      margin-top: 12px;
+    }
+    .heatmap-cell {
+      height: 20px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      transition: var(--transition);
+    }
+    .heatmap-cell:hover { opacity: 0.8; cursor: pointer; }
+
+    .profile-avatar {
+      width: 72px; height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(0,212,170,0.2), rgba(0,166,136,0.1));
+      border: 2px solid rgba(0,212,170,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    .content-section { display: none; }
+    .content-section.active { display: block; }
+
+    @media (max-width: 900px) {
+      .sidebar { position: static; width: 100%; }
+      #dash-layout { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🛡️</div>
+    <span class="gradient-text">Sanjeevani</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+    <li><a href="register.html" data-i18n="nav.register">Register</a></li>
+    <li><a href="dashboard.html" data-i18n="nav.dashboard" class="active">Dashboard</a></li>
+    <li><a href="hotspot.html" data-i18n="nav.hotspot">Hotspot Map</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="hi">हिं</button>
+    </div>
+  </div>
+</nav>
+
+<!-- No Profile Banner -->
+<div id="no-profile-banner" class="hidden" style="position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div class="glass-static" style="max-width:400px;width:100%;padding:40px;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:12px;">⚠️</div>
+    <h2 style="font-weight:800;margin-bottom:8px;" class="display-font">No Profile Found</h2>
+    <p style="color:var(--text-secondary);margin-bottom:24px;font-size:0.9rem;">Register first to access your Smart-Shield dashboard.</p>
+    <a href="register.html" class="btn btn-primary btn-lg" style="width:100%;">🛡️ Create My Profile</a>
+    <br/><br/>
+    <button onclick="loadDemoData()" style="color:var(--text-muted);font-size:0.85rem;background:none;border:none;cursor:pointer;text-decoration:underline;">Load Demo Data</button>
+  </div>
+</div>
+
+<div style="padding-top:90px;padding-bottom:40px;position:relative;z-index:1;">
+  <div class="container" style="max-width:1100px;">
+
+    <!-- Page Header -->
+    <div style="margin-bottom:28px;">
+      <span class="badge badge-teal" style="margin-bottom:8px;">My Dashboard</span>
+      <h1 class="display-font" style="font-size:2rem;font-weight:800;" id="dash-greeting">Good evening 👋</h1>
+      <p style="color:var(--text-secondary);">Manage your SmartShield profile and monitor your safety.</p>
+    </div>
+
+    <!-- Main Layout -->
+    <div style="display:flex;gap:24px;align-items:flex-start;" id="dash-layout">
+
+      <!-- SIDEBAR -->
+      <div class="sidebar glass-static" style="padding:16px;">
+        <!-- Mini Profile -->
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:12px;">
+          <div class="profile-avatar" id="dash-avatar">👤</div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="dash-name">–</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);" id="dash-blood">Blood: –</div>
+            <span class="plan-badge plan-free" id="dash-plan-badge">Free</span>
+          </div>
+        </div>
+        <div class="divider" style="margin:8px 0;"></div>
+
+        <a class="sidebar-item active" onclick="showSection('overview')">
+          <span class="icon">📊</span> Overview
+        </a>
+        <a class="sidebar-item" onclick="showSection('profile')">
+          <span class="icon">👤</span> My Profile
+        </a>
+        <a class="sidebar-item" onclick="showSection('qr-nfc')">
+          <span class="icon">📱</span> QR & NFC
+        </a>
+        <a class="sidebar-item" onclick="showSection('history')">
+          <span class="icon">📍</span> Scan History
+        </a>
+        <a class="sidebar-item" onclick="showSection('analytics')">
+          <span class="icon">📈</span> Analytics
+        </a>
+        <a class="sidebar-item" onclick="showSection('upgrade')">
+          <span class="icon">⚡</span> Upgrade Plan
+        </a>
+
+        <div class="divider" style="margin:8px 0;"></div>
+        <a href="scan.html" class="sidebar-item" target="_blank">
+          <span class="icon">👁️</span> Test My Profile
+        </a>
+        <a class="sidebar-item" onclick="if(confirm('Reset all data?')){localStorage.clear();location.href='register.html';}">
+          <span class="icon" style="color:var(--red);">🗑️</span> <span style="color:var(--red);">Reset Profile</span>
+        </a>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div style="flex:1;min-width:0;">
+
+        <!-- ── OVERVIEW ────────────────────── -->
+        <div id="section-overview" class="content-section active">
+          <!-- Metrics -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;" id="metrics-row">
+            <div class="metric-card">
+              <div style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">🛡️ Shield Status</div>
+              <div class="display-font" style="font-size:2rem;font-weight:700;color:var(--teal);" id="met-status">Active</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;">Profile is live</div>
+            </div>
+            <div class="metric-card">
+              <div style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">📍 Total Scans</div>
+              <div class="display-font" style="font-size:2rem;font-weight:700;color:var(--gold);" id="met-scans">0</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;">Across all locations</div>
+            </div>
+            <div class="metric-card">
+              <div style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">🚨 SOS Alerts</div>
+              <div class="display-font" style="font-size:2rem;font-weight:700;color:var(--red);" id="met-sos">0</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;">Sent this year</div>
+            </div>
+          </div>
+
+          <!-- Profile Completeness -->
+          <div class="glass-static" style="padding:24px;margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h3 style="font-weight:700;">Profile Completeness</h3>
+              <span id="completeness-pct" style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--teal);">0%</span>
+            </div>
+            <div class="mini-bar" style="height:10px;margin-bottom:16px;">
+              <div class="mini-bar-fill" id="completeness-bar" style="width:0%;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="completeness-items"></div>
+          </div>
+
+          <!-- Emergency Info Quick View -->
+          <div class="glass-static" style="padding:24px;margin-bottom:20px;">
+            <h3 style="font-weight:700;margin-bottom:16px;">⚡ Quick Emergency Info</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="quick-info-grid">
+              <!-- Populated by JS -->
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+              <a href="scan.html" target="_blank" class="btn btn-primary btn-sm">👁️ Preview My Scan Page</a>
+              <button onclick="showSection('profile')" class="btn btn-ghost btn-sm">✏️ Edit Profile</button>
+            </div>
+          </div>
+
+          <!-- Recent Scans Preview -->
+          <div class="glass-static" style="padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h3 style="font-weight:700;">📍 Recent Scan Events</h3>
+              <button onclick="showSection('history')" style="color:var(--teal);background:none;border:none;cursor:pointer;font-size:0.85rem;">View all →</button>
+            </div>
+            <div id="recent-scans-list" style="display:flex;flex-direction:column;gap:8px;">
+              <p style="color:var(--text-muted);font-size:0.9rem;">No scans recorded yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── PROFILE EDIT ───────────────── -->
+        <div id="section-profile" class="content-section">
+          <div class="glass-static" style="padding:32px;">
+            <h2 class="display-font" style="font-size:1.6rem;font-weight:700;margin-bottom:24px;">👤 Edit My Profile</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="edit-form-grid">
+              <!-- Populated by JS -->
+            </div>
+            <div style="margin-top:24px;display:flex;gap:12px;">
+              <button onclick="saveEdits()" class="btn btn-primary">💾 Save Changes</button>
+              <button onclick="showSection('overview')" class="btn btn-ghost">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── QR & NFC ────────────────────── -->
+        <div id="section-qr-nfc" class="content-section">
+          <div class="glass-static" style="padding:32px;text-align:center;margin-bottom:20px;">
+            <h2 class="display-font" style="font-size:1.6rem;font-weight:700;margin-bottom:8px;">📱 Your QR Code</h2>
+            <p style="color:var(--text-secondary);margin-bottom:24px;font-size:0.9rem;">Scan this with any camera to view your emergency profile.</p>
+            <div id="dash-qr" style="display:flex;justify-content:center;margin-bottom:20px;"></div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+              <button onclick="downloadDashQR()" class="btn btn-primary">⬇ Download QR</button>
+              <button onclick="shareQR()" class="btn btn-ghost">📤 Share Link</button>
+              <a id="dash-scan-link" href="scan.html" target="_blank" class="btn btn-outline">👁️ Test</a>
+            </div>
+          </div>
+
+          <!-- NFC Guide -->
+          <div class="glass-static" style="padding:28px;">
+            <h3 style="font-weight:700;margin-bottom:16px;">📡 NFC Chip Setup Guide</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;">
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,212,170,0.1);border:1px solid var(--teal);display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;font-size:0.8rem;flex-shrink:0;">1</div>
+                <div><strong>Buy NTAG213 NFC stickers</strong> — available on Amazon/Flipkart for ₹30 each.</div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,212,170,0.1);border:1px solid var(--teal);display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;font-size:0.8rem;flex-shrink:0;">2</div>
+                <div>Download <strong>NFC Tools app</strong> (free — Android & iOS).</div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,212,170,0.1);border:1px solid var(--teal);display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;font-size:0.8rem;flex-shrink:0;">3</div>
+                <div>Write your profile URL to the NFC chip — tap → Write → URL → paste your link below.</div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,212,170,0.1);border:1px solid var(--teal);display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;font-size:0.8rem;flex-shrink:0;">4</div>
+                <div>Stick the NFC chip on your helmet, bike, or wallet. Done! 🎉</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:8px;align-items:center;">
+              <input class="form-input" id="nfc-url" style="flex:1;" readonly/>
+              <button onclick="copyNFCUrl()" class="btn btn-primary btn-sm">📋 Copy URL</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SCAN HISTORY ────────────────── -->
+        <div id="section-history" class="content-section">
+          <div class="glass-static" style="padding:28px;">
+            <h2 class="display-font" style="font-size:1.6rem;font-weight:700;margin-bottom:8px;">📍 Scan History</h2>
+            <p style="color:var(--text-secondary);margin-bottom:20px;font-size:0.88rem;">Every time your QR/NFC was scanned — location and timestamp.</p>
+            <div id="history-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+        </div>
+
+        <!-- ── ANALYTICS ───────────────────── -->
+        <div id="section-analytics" class="content-section">
+          <div class="glass-static" style="padding:28px;margin-bottom:20px;">
+            <h2 class="display-font" style="font-size:1.6rem;font-weight:700;margin-bottom:16px;">📈 Scan Analytics</h2>
+            <p style="color:var(--text-secondary);margin-bottom:20px;font-size:0.88rem;">Scan activity over the past 3 months — helps identify dangerous patterns.</p>
+            <div class="mini-heatmap" id="heatmap-grid"></div>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:12px;">
+              <div style="display:flex;align-items:center;gap:6px;font-size:0.76rem;color:var(--text-muted);">
+                <div style="width:12px;height:12px;border-radius:2px;background:rgba(255,255,255,0.04);"></div> No scans
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:0.76px;color:var(--text-muted);">
+                <div style="width:12px;height:12px;border-radius:2px;background:rgba(0,212,170,0.6);"></div> Scanned
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Chart -->
+          <div class="glass-static" style="padding:28px;">
+            <h3 style="font-weight:700;margin-bottom:16px;">📊 Scans per Day (This Week)</h3>
+            <div style="display:flex;align-items:flex-end;gap:8px;height:100px;" id="bar-chart">
+              <!-- Built by JS -->
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;" id="bar-labels"></div>
+          </div>
+        </div>
+
+        <!-- ── UPGRADE ─────────────────────── -->
+        <div id="section-upgrade" class="content-section">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="glass-static" style="padding:28px;text-align:center;border-color:rgba(0,212,170,0.3);box-shadow:var(--shadow-teal);">
+              <div style="font-size:2rem;margin-bottom:8px;">⚡</div>
+              <h3 style="font-weight:800;font-size:1.2rem;margin-bottom:4px;">Pro Shield</h3>
+              <div class="display-font" style="font-size:2.4rem;font-weight:700;color:var(--teal);margin-bottom:4px;">₹99</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:20px;">per year</div>
+              <ul style="list-style:none;font-size:0.88rem;display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:24px;">
+                <li>✅ QR + NFC Sticker Shipped</li>
+                <li>✅ SOS SMS via Fast2SMS</li>
+                <li>✅ 24/7 Follow-up Call Center</li>
+                <li>✅ Nearest Hospital Auto-Find</li>
+                <li>✅ Gemini AI First Aid Guide</li>
+                <li>✅ WhatsApp Emergency Alert</li>
+              </ul>
+              <button class="btn btn-primary" style="width:100%;" onclick="Toast.success('Payment gateway coming soon! Contact us at sanjeevani@email.com')">Upgrade to Pro ⚡</button>
+            </div>
+
+            <div class="glass-static" style="padding:28px;text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">🏢</div>
+              <h3 style="font-weight:800;font-size:1.2rem;margin-bottom:4px;">Fleet B2B</h3>
+              <div class="display-font" style="font-size:2.4rem;font-weight:700;color:var(--gold);margin-bottom:4px;">₹29</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:20px;">per rider · per year</div>
+              <ul style="list-style:none;font-size:0.88rem;display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:24px;">
+                <li>✅ All Pro features</li>
+                <li>✅ Fleet Manager Dashboard</li>
+                <li>✅ Insurance Data Sync</li>
+                <li>✅ Hotspot Reports PDF</li>
+                <li>✅ Dedicated Phone Support</li>
+                <li>✅ Minimum 25 riders</li>
+              </ul>
+              <button class="btn btn-ghost" style="width:100%;" onclick="Toast.info('Call us: +91-9999-999999 for Fleet packages')">Contact for Fleet →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script>
+  let currentProfile = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    currentProfile = await DB.getCurrentProfile();
+    if (!currentProfile) {
+      document.getElementById('no-profile-banner').classList.remove('hidden');
+    } else {
+      initDashboard(currentProfile);
+    }
+
+    // Greeting
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('dash-greeting').textContent = `${greet} 👋`;
+  });
+
+  function loadDemoData() {
+    const demo = {
+      id: 'demo-001', name: 'Akash Kumar', age: 22, gender: 'Male',
+      blood_group: 'A+', allergies: 'Penicillin', medications: 'None',
+      conditions: 'None', notes: 'Helmet worn always.', is_donor: true,
+      emergency_contact_name: 'Raj Kumar (Father)', emergency_contact: '9876543210',
+      address: 'Kanpur, UP', created_at: new Date().toISOString()
+    };
+    DB.saveProfile(demo);
+    // Add some mock scans
+    const scans = [
+      { lat: 26.449, lng: 80.331, profileId: 'demo-001', timestamp: Date.now() - 86400000 },
+      { lat: 26.451, lng: 80.335, profileId: 'demo-001', timestamp: Date.now() - 3600000 },
+      { lat: 26.448, lng: 80.326, profileId: 'demo-001', timestamp: Date.now() },
+    ];
+    localStorage.setItem('snj_scans', JSON.stringify(scans));
+    document.getElementById('no-profile-banner').classList.add('hidden');
+    initDashboard(demo);
+    Toast.success('Demo data loaded! Explore your dashboard.');
+  }
+
+  function initDashboard(p) {
+    // Sidebar
+    document.getElementById('dash-name').textContent = p.name;
+    document.getElementById('dash-blood').textContent = `Blood: ${p.blood_group || '–'}`;
+    document.getElementById('dash-avatar').textContent = p.name?.[0]?.toUpperCase() || '👤';
+
+    // Metrics
+    const scans = JSON.parse(localStorage.getItem('snj_scans') || '[]');
+    const myScans = scans.filter(s => s.profileId === p.id);
+    document.getElementById('met-scans').textContent = myScans.length;
+
+    // Completeness
+    const fields = [
+      { label: '✅ Name', done: !!p.name },
+      { label: '✅ Blood Group', done: !!p.blood_group },
+      { label: '✅ Emergency Contact', done: !!p.emergency_contact },
+      { label: '✅ Allergies Listed', done: !!p.allergies },
+      { label: '✅ Medications', done: !!p.medications },
+      { label: '✅ Conditions', done: !!p.conditions },
+      { label: '✅ Organ Donor', done: !!p.is_donor },
+      { label: '✅ Address', done: !!p.address },
+    ];
+    const done = fields.filter(f => f.done).length;
+    const pct = Math.round((done / fields.length) * 100);
+    document.getElementById('completeness-pct').textContent = `${pct}%`;
+    document.getElementById('completeness-bar').style.width = `${pct}%`;
+    document.getElementById('completeness-items').innerHTML = fields.map(f => `
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:${f.done ? 'var(--teal)' : 'var(--text-muted)'};">
+        <span>${f.done ? '✅' : '⬜'}</span> ${f.label.replace('✅ ','')}
+      </div>`).join('');
+
+    // Quick Info
+    document.getElementById('quick-info-grid').innerHTML = [
+      { label: '🩸 Blood Group', val: p.blood_group, color: 'var(--red)' },
+      { label: '📞 Emergency Contact', val: p.emergency_contact_name || p.emergency_contact, color: 'var(--teal)' },
+      { label: '⚠️ Allergies', val: p.allergies || 'None', color: 'var(--orange)' },
+      { label: '💊 Medications', val: p.medications || 'None', color: 'var(--text-primary)' },
+    ].map(i => `
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px;">
+        <div style="color:var(--text-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">${i.label}</div>
+        <div style="color:${i.color};font-weight:600;margin-top:4px;font-size:0.9rem;">${i.val || '–'}</div>
+      </div>`).join('');
+
+    // Recent Scans
+    if (myScans.length > 0) {
+      document.getElementById('recent-scans-list').innerHTML = myScans.slice(-3).reverse().map(s => `
+        <div class="scan-row">
+          <div style="font-size:1.2rem;">📍</div>
+          <div style="flex:1;">
+            <div style="font-size:0.88rem;font-weight:600;">Scan event — ${new Date(s.timestamp).toLocaleDateString('en-IN')}</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">${s.lat?.toFixed(4)}°N, ${s.lng?.toFixed(4)}°E</div>
+          </div>
+          <a href="https://maps.google.com/?q=${s.lat},${s.lng}" target="_blank" style="color:var(--teal);font-size:0.8rem;text-decoration:none;">View →</a>
+        </div>`).join('');
+    }
+
+    // Full History
+    document.getElementById('history-list').innerHTML = myScans.length
+      ? myScans.slice().reverse().map((s, i) => `
+        <div class="scan-row">
+          <div style="width:32px;height:32px;background:rgba(0,212,170,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:700;color:var(--teal);">#${myScans.length - i}</div>
+          <div style="flex:1;">
+            <div style="font-size:0.88rem;font-weight:600;">${new Date(s.timestamp).toLocaleString('en-IN')}</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">📍 ${s.lat?.toFixed(5)}°N, ${s.lng?.toFixed(5)}°E</div>
+          </div>
+          <a href="https://maps.google.com/?q=${s.lat},${s.lng}" target="_blank" class="btn btn-ghost btn-sm">Maps ↗</a>
+        </div>`).join('')
+      : '<p style="color:var(--text-muted);font-size:0.9rem;">No scan events recorded yet. Test by scanning your QR code.</p>';
+
+    // Heatmap (mock 90 days)
+    const heatGrid = document.getElementById('heatmap-grid');
+    for (let i = 0; i < 90; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      const hasScan = myScans.some(s => {
+        const d = new Date(s.timestamp);
+        return Math.floor((Date.now() - d) / 86400000) === (89 - i);
+      });
+      cell.style.background = hasScan
+        ? `rgba(0,212,170,${0.4 + Math.random() * 0.5})`
+        : 'rgba(255,255,255,0.04)';
+      cell.title = new Date(Date.now() - (89-i) * 86400000).toLocaleDateString('en-IN');
+      heatGrid.appendChild(cell);
+    }
+
+    // Bar chart (7 days)
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const barChart = document.getElementById('bar-chart');
+    const barLabels = document.getElementById('bar-labels');
+    days.forEach((day, i) => {
+      const val = myScans.filter(s => {
+        const d = new Date(s.timestamp);
+        return d.getDay() === (i + 1) % 7;
+      }).length;
+      const max = 5;
+      const h = Math.max(8, (val / max) * 80);
+      barChart.innerHTML += `<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;">
+        <div style="width:100%;height:${h}px;background:linear-gradient(180deg,var(--teal),var(--teal-dark));border-radius:4px 4px 0 0;position:relative;" title="${val} scans">
+          ${val > 0 ? `<div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:0.7rem;font-weight:700;color:var(--teal);">${val}</div>` : ''}
+        </div></div>`;
+      barLabels.innerHTML += `<div style="flex:1;text-align:center;font-size:0.72rem;color:var(--text-muted);">${day}</div>`;
+    });
+
+    // QR
+    const scanURL = QRManager.buildProfileURL(p);
+    QRManager.generate('dash-qr', scanURL, { size: 200 });
+    document.getElementById('dash-scan-link').href = scanURL;
+    document.getElementById('nfc-url').value = scanURL;
+
+    // Edit form
+    const editFields = [
+      { id: 'name', label: 'Full Name', val: p.name, type: 'text' },
+      { id: 'age', label: 'Age', val: p.age, type: 'number' },
+      { id: 'blood_group', label: 'Blood Group', val: p.blood_group, type: 'text' },
+      { id: 'allergies', label: 'Allergies', val: p.allergies, type: 'text' },
+      { id: 'medications', label: 'Medications', val: p.medications, type: 'text' },
+      { id: 'conditions', label: 'Conditions', val: p.conditions, type: 'text' },
+      { id: 'emergency_contact_name', label: 'Emergency Contact Name', val: p.emergency_contact_name, type: 'text' },
+      { id: 'emergency_contact', label: 'Emergency Contact Phone', val: p.emergency_contact, type: 'tel' },
+    ];
+    document.getElementById('edit-form-grid').innerHTML = editFields.map(f => `
+      <div class="form-group">
+        <label class="form-label">${f.label}</label>
+        <input class="form-input" type="${f.type}" id="edit-${f.id}" value="${f.val || ''}"/>
+      </div>`).join('');
+  }
+
+  async function saveEdits() {
+    if (!currentProfile) return;
+    ['name','age','blood_group','allergies','medications','conditions','emergency_contact_name','emergency_contact'].forEach(key => {
+      const el = document.getElementById(`edit-${key}`);
+      if (el) currentProfile[key] = el.value;
+    });
+    await DB.saveProfile(currentProfile);
+    Toast.success('Profile updated successfully!');
+    initDashboard(currentProfile);
+    showSection('overview');
+  }
+
+  function showSection(name) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    document.getElementById(`section-${name}`).classList.add('active');
+    event?.target?.closest('.sidebar-item')?.classList.add('active');
+  }
+
+  function downloadDashQR() {
+    const canvas = document.querySelector('#dash-qr canvas');
+    if (canvas) {
+      const a = document.createElement('a'); a.download = 'sanjeevani-qr.png'; a.href = canvas.toDataURL(); a.click();
+    }
+    Toast.success('QR downloaded!');
+  }
+  function shareQR() {
+    const link = document.getElementById('dash-scan-link').href;
+    if (navigator.share) navigator.share({ title: 'My Sanjeevani Emergency ID', url: link });
+    else { navigator.clipboard.writeText(link); Toast.info('Link copied!'); }
+  }
+  function copyNFCUrl() {
+    const val = document.getElementById('nfc-url').value;
+    navigator.clipboard.writeText(val);
+    Toast.success('URL copied! Paste in NFC Tools app.');
+  }
+</script>
+</body>
+</html>

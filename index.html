@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Sanjeevani Smart-Shield — India's first intelligent emergency QR+NFC medical ID system. Detect, Connect, Protect."/>
+  <meta name="theme-color" content="#00d4aa"/>
+  <meta property="og:title" content="Sanjeevani Smart-Shield"/>
+  <meta property="og:description" content="Your medical data, instantly available when it matters the most."/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="assets/css/main.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Sanjeevani Smart-Shield — Detect. Connect. Protect.</title>
+  <style>
+    .hero-title { font-size: clamp(2.4rem, 6vw, 5rem); line-height: 1.08; font-weight: 900; }
+    .feature-icon { width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0; }
+    .step-num { width:48px;height:48px;border-radius:50%;background:rgba(0,212,170,0.12);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--teal);flex-shrink:0; }
+    .phone-mockup { width:280px;position:relative;margin:auto; }
+    .phone-screen { border-radius:32px;overflow:hidden;border:2px solid rgba(0,212,170,0.2);box-shadow:0 40px 80px rgba(0,0,0,0.6),0 0 60px rgba(0,212,170,0.1); }
+    @keyframes float { 0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-18px) rotate(2deg)} }
+    .hero-phone { animation: float 6s ease-in-out infinite; }
+    .tier-card { padding:32px;text-align:center;position:relative; }
+    .tier-card.popular::before { content:'Most Popular';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#000;padding:4px 16px;border-radius:100px;font-size:0.75rem;font-weight:700;letter-spacing:0.06em; }
+    .tier-price { font-family:var(--font-display);font-size:3rem;font-weight:700;line-height:1; }
+    .tech-pill { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:100px;font-size:0.82rem;font-weight:500;transition:var(--transition); }
+    .tech-pill:hover { background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.3); }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🛡️</div>
+    <span class="gradient-text">Sanjeevani</span>
+  </a>
+
+  <ul class="nav-links" id="nav-links">
+    <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+    <li><a href="register.html" data-i18n="nav.register">Register</a></li>
+    <li><a href="dashboard.html" data-i18n="nav.dashboard">Dashboard</a></li>
+    <li><a href="hotspot.html" data-i18n="nav.hotspot">Hotspot Map</a></li>
+  </ul>
+
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="hi">हिं</button>
+    </div>
+    <a href="register.html" class="btn btn-primary btn-sm" style="display:none" id="nav-cta">Get Started</a>
+    <button id="nav-toggle" style="background:none;border:none;color:var(--text-primary);font-size:1.5rem;cursor:pointer;padding:4px;display:none;" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<!-- ── HERO ──────────────────────────────────────────────── -->
+<section class="section" style="padding-top:140px;padding-bottom:80px;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;" id="hero-grid">
+
+      <!-- Left -->
+      <div class="animate-fade-up">
+        <div style="margin-bottom:20px;">
+          <span class="badge badge-teal animate-fade-up">🏆 IDAA '26 Project</span>
+          &nbsp;
+          <span class="badge badge-red animate-fade-up delay-1">🔴 LIVE</span>
+        </div>
+
+        <h1 class="hero-title display-font" style="margin-bottom:20px;">
+          <span class="gradient-text">Detect.</span><br>
+          <span style="color:var(--text-primary);">Connect.</span><br>
+          <span style="background:linear-gradient(135deg,#ff4757,#ff8c42);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Protect.</span>
+        </h1>
+
+        <p style="font-size:1.1rem;color:var(--text-secondary);margin-bottom:32px;max-width:480px;line-height:1.7;">
+          India's first <strong style="color:var(--text-primary);">AI-powered emergency QR + NFC</strong> medical ID system. Your vital data reaches rescuers in <strong style="color:var(--teal);">under 3 seconds</strong> — even without internet.
+        </p>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px;">
+          <a href="register.html" class="btn btn-primary btn-lg" id="hero-cta">
+            🛡️ Create My Shield
+          </a>
+          <a href="scan.html?demo=1" class="btn btn-ghost btn-lg">
+            👁️ Demo Scan
+          </a>
+        </div>
+
+        <!-- Stats Row -->
+        <div style="display:flex;gap:32px;flex-wrap:wrap;">
+          <div>
+            <div class="display-font" style="font-size:1.8rem;font-weight:700;color:var(--teal);">10s</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);">Golden Hour Response</div>
+          </div>
+          <div>
+            <div class="display-font" style="font-size:1.8rem;font-weight:700;color:var(--gold);">0G</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);">Works Offline</div>
+          </div>
+          <div>
+            <div class="display-font" style="font-size:1.8rem;font-weight:700;color:var(--red);">108</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);">Auto-Alert Ambulance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right — Phone mockup -->
+      <div class="hero-phone" style="text-align:center;">
+        <div class="phone-mockup">
+          <div class="phone-screen">
+            <!-- Mini scan page preview -->
+            <div style="background:#040810;padding:24px;min-height:480px;font-size:0.8rem;">
+              <!-- Status bar -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:8px 12px;background:rgba(255,71,87,0.1);border-radius:10px;border:1px solid rgba(255,71,87,0.3);">
+                <span style="color:var(--red);font-size:0.7rem;font-weight:700;">🚨 EMERGENCY MODE</span>
+                <span class="badge badge-red" style="font-size:0.6rem;">LIVE</span>
+              </div>
+
+              <!-- Blood badge + name -->
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <div class="blood-badge" style="width:52px;height:52px;font-size:1.1rem;">A+</div>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;color:var(--text-primary);">Akash Kumar</div>
+                  <div class="donor-badge" style="font-size:0.65rem;margin-top:4px;">💚 Organ Donor</div>
+                </div>
+              </div>
+
+              <!-- Info Grid -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.06);">
+                  <div style="color:var(--text-muted);font-size:0.6rem;text-transform:uppercase;letter-spacing:.04em">Allergies</div>
+                  <div style="color:var(--orange);font-size:0.75rem;font-weight:600;margin-top:2px;">Penicillin</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.06);">
+                  <div style="color:var(--text-muted);font-size:0.6rem;text-transform:uppercase;letter-spacing:.04em">Contact</div>
+                  <div style="color:var(--teal);font-size:0.75rem;font-weight:600;margin-top:2px;">Raj Kumar</div>
+                </div>
+              </div>
+
+              <!-- SOS Button -->
+              <div style="background:linear-gradient(135deg,#ff4757,#c0392b);border-radius:12px;padding:14px;text-align:center;color:#fff;font-weight:700;font-size:0.85rem;margin-bottom:12px;box-shadow:0 4px 20px rgba(255,71,87,0.4);">
+                🚨 SEND SOS ALERT
+              </div>
+
+              <!-- Hospital -->
+              <div style="background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:10px;padding:10px;">
+                <div style="color:var(--teal);font-size:0.7rem;font-weight:600;">📍 Nearest Hospital</div>
+                <div style="font-size:0.78rem;color:var(--text-primary);margin-top:3px;">Regency Hospital — 2.1 km</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating badges -->
+          <div style="position:absolute;top:-20px;right:-20px;background:rgba(0,212,170,0.9);color:#000;padding:8px 12px;border-radius:12px;font-size:0.75rem;font-weight:700;box-shadow:var(--shadow-teal);">
+            ✅ NFC Tap
+          </div>
+          <div style="position:absolute;bottom:40px;left:-30px;background:rgba(255,71,87,0.9);color:#fff;padding:8px 12px;border-radius:12px;font-size:0.75rem;font-weight:700;box-shadow:var(--shadow-red);">
+            📍 GPS Fetched
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── TECH STACK PILLS ───────────────────────────────────── -->
+<div style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:20px 0;background:rgba(255,255,255,0.01);position:relative;z-index:1;overflow:hidden;">
+  <div style="display:flex;gap:12px;padding:0 24px;flex-wrap:wrap;justify-content:center;align-items:center;">
+    <span style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:8px;">Powered by</span>
+    <span class="tech-pill">🔥 Firebase</span>
+    <span class="tech-pill">🗺️ Google Maps API</span>
+    <span class="tech-pill">📱 NFC NTAG213</span>
+    <span class="tech-pill">📲 Fast2SMS</span>
+    <span class="tech-pill">🤖 Gemini AI</span>
+    <span class="tech-pill">🔐 AES-256</span>
+    <span class="tech-pill">📡 PWA Offline</span>
+    <span class="tech-pill">💊 e-RaktKosh API</span>
+  </div>
+</div>
+
+<!-- ── FEATURES ───────────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:60px;" class="animate-on-scroll">
+      <span class="badge badge-teal" style="margin-bottom:12px;">Features</span>
+      <h2 class="display-font" style="font-size:2.6rem;font-weight:700;margin-bottom:12px;">One Shield.<br><span class="gradient-text">Every Emergency Covered.</span></h2>
+      <p style="color:var(--text-secondary);max-width:520px;margin:auto;">Built for civilians, engineers, and businesses — three perspectives, one solution.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;" id="features-grid">
+
+      <!-- Feature 1 -->
+      <div class="glass animate-on-scroll" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(255,71,87,0.12);margin-bottom:16px;">🗣️</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Voice-Guided First Aid</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">On scan, the phone reads medical info aloud in Hindi or English — critical for panicked bystanders.</p>
+        <div style="margin-top:16px;"><span class="badge badge-teal">Civilian</span></div>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="glass animate-on-scroll delay-1" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(34,197,94,0.12);margin-bottom:16px;">💚</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Organ Donor Badge</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Visible green badge on your profile — helps hospitals make life-saving decisions in the golden hour.</p>
+        <div style="margin-top:16px;"><span class="badge badge-green">Healthcare</span></div>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="glass animate-on-scroll delay-2" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(0,212,170,0.12);margin-bottom:16px;">🌐</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Hindi / English Toggle</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Seamless multilingual switch. From Kanpur highways to Delhi streets — everyone can read it.</p>
+        <div style="margin-top:16px;"><span class="badge badge-teal">Accessibility</span></div>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="glass animate-on-scroll" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(59,130,246,0.12);margin-bottom:16px;">📡</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Hybrid NFC + QR</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">One tap with NFC or scan with camera — works at night, in rain, with gloves on. Zero friction.</p>
+        <div style="margin-top:16px;"><span class="badge badge-blue">Engineer</span></div>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="glass animate-on-scroll delay-1" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(255,140,66,0.12);margin-bottom:16px;">🔐</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Offline AES-256 Encode</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Blood group + SOS number encoded in the QR itself. Zero-internet zones can still read critical data.</p>
+        <div style="margin-top:16px;"><span class="badge badge-blue">Security</span></div>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="glass animate-on-scroll delay-2" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(139,92,246,0.12);margin-bottom:16px;">🗺️</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Accident Hotspot AI</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Every scan location is logged. AI generates dangerous zone heatmaps for government reporting.</p>
+        <div style="margin-top:16px;"><span class="badge badge-blue">Analytics</span></div>
+      </div>
+
+      <!-- Feature 7 -->
+      <div class="glass animate-on-scroll" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(255,215,0,0.12);margin-bottom:16px;">🏢</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">B2B Fleet Protection</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Bulk packages for Zomato, Swiggy, and logistics fleets. One dashboard for fleet managers.</p>
+        <div style="margin-top:16px;"><span class="badge badge-gold">Business</span></div>
+      </div>
+
+      <!-- Feature 8 -->
+      <div class="glass animate-on-scroll delay-1" style="padding:28px;">
+        <div class="feature-icon" style="background:rgba(0,212,170,0.12);margin-bottom:16px;">🤖</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Gemini AI First Aid</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Ask anything in the moment — "Is the patient breathing?" — AI guides step-by-step in simple Hindi/English.</p>
+        <div style="margin-top:16px;"><span class="badge badge-teal">AI</span></div>
+      </div>
+
+      <!-- Feature 9 -->
+      <div class="glass animate-on-scroll delay-2" style="padding:28px;border-color:rgba(0,212,170,0.3);">
+        <div class="feature-icon" style="background:rgba(255,71,87,0.12);margin-bottom:16px;">🔔</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:1.05rem;">Find My Bike Alert</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Helmet or bike scan sends anti-theft notification to owner — beyond medical, it's full safety.</p>
+        <div style="margin-top:16px;"><span class="badge badge-red">Anti-Theft</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ────────────────────────────────────────── -->
+<section class="section" style="background:rgba(255,255,255,0.01);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:60px;" class="animate-on-scroll">
+      <span class="badge badge-red" style="margin-bottom:12px;">Workflow</span>
+      <h2 class="display-font" style="font-size:2.6rem;font-weight:700;">How It Works in <span class="gradient-text-red">3 Seconds</span></h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:start;position:relative;" id="steps-grid">
+
+      <div style="position:absolute;top:28px;left:calc(12.5%);right:calc(12.5%);height:2px;background:linear-gradient(90deg,var(--teal),rgba(0,212,170,0.1));z-index:0;"></div>
+
+      <!-- Step 1 -->
+      <div style="text-align:center;padding:0 16px;position:relative;z-index:1;" class="animate-on-scroll">
+        <div class="step-num" style="margin:0 auto 20px;">1</div>
+        <div style="font-size:2rem;margin-bottom:12px;">📱</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:0.95rem;">Scan / Tap</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;">QR scan or NFC tap — no app required</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="text-align:center;padding:0 16px;position:relative;z-index:1;" class="animate-on-scroll delay-1">
+        <div class="step-num" style="margin:0 auto 20px;">2</div>
+        <div style="font-size:2rem;margin-bottom:12px;">📍</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:0.95rem;">GPS Fetched</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;">Location captured & logged automatically</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="text-align:center;padding:0 16px;position:relative;z-index:1;" class="animate-on-scroll delay-2">
+        <div class="step-num" style="margin:0 auto 20px;">3</div>
+        <div style="font-size:2rem;margin-bottom:12px;">🆔</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:0.95rem;">Medical ID</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;">Full profile shown with critical info</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div style="text-align:center;padding:0 16px;position:relative;z-index:1;" class="animate-on-scroll delay-3">
+        <div class="step-num" style="margin:0 auto 20px;">4</div>
+        <div style="font-size:2rem;margin-bottom:12px;">🚨</div>
+        <h3 style="font-weight:700;margin-bottom:8px;font-size:0.95rem;">SOS Alert</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;">Family & ambulance get instant SMS</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ─────────────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:60px;" class="animate-on-scroll">
+      <span class="badge badge-gold" style="margin-bottom:12px;">Pricing</span>
+      <h2 class="display-font" style="font-size:2.6rem;font-weight:700;">Protection for <span class="gradient-text">Every Budget</span></h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:auto;">
+
+      <!-- Basic -->
+      <div class="glass tier-card animate-on-scroll">
+        <div style="font-size:2rem;margin-bottom:8px;">🛡️</div>
+        <h3 style="font-weight:700;margin-bottom:4px;">Basic</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:20px;">QR sticker only</p>
+        <div class="tier-price gradient-text">₹49</div>
+        <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:24px;">one-time</div>
+        <ul style="list-style:none;text-align:left;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;font-size:0.9rem;">
+          <li>✅ Dynamic QR Code</li>
+          <li>✅ Emergency Medical ID</li>
+          <li>✅ Offline Data Encode</li>
+          <li style="color:var(--text-muted);">— NFC Chip</li>
+          <li style="color:var(--text-muted);">— SOS SMS</li>
+        </ul>
+        <a href="register.html" class="btn btn-outline" style="width:100%;">Get Basic</a>
+      </div>
+
+      <!-- Pro — Popular -->
+      <div class="glass tier-card popular animate-on-scroll delay-1" style="border-color:rgba(0,212,170,0.4);box-shadow:var(--shadow-teal);">
+        <div style="font-size:2rem;margin-bottom:8px;">⚡</div>
+        <h3 style="font-weight:700;margin-bottom:4px;">Pro Shield</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:20px;">QR + NFC + SOS</p>
+        <div class="tier-price gradient-text">₹99</div>
+        <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:24px;">per year</div>
+        <ul style="list-style:none;text-align:left;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;font-size:0.9rem;">
+          <li>✅ Dynamic QR + NFC Sticker</li>
+          <li>✅ SOS SMS via Fast2SMS</li>
+          <li>✅ Nearest Hospital Finder</li>
+          <li>✅ Voice-Guided First Aid</li>
+          <li>✅ 24/7 Follow-up Call</li>
+        </ul>
+        <a href="register.html" class="btn btn-primary" style="width:100%;">Get Pro ⚡</a>
+      </div>
+
+      <!-- Fleet -->
+      <div class="glass tier-card animate-on-scroll delay-2">
+        <div style="font-size:2rem;margin-bottom:8px;">🏢</div>
+        <h3 style="font-weight:700;margin-bottom:4px;">Fleet B2B</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:20px;">Bulk for companies</p>
+        <div class="tier-price" style="color:var(--gold);">₹29</div>
+        <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:24px;">per rider/year</div>
+        <ul style="list-style:none;text-align:left;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;font-size:0.9rem;">
+          <li>✅ All Pro features</li>
+          <li>✅ Fleet Manager Dashboard</li>
+          <li>✅ Insurance Data Sync</li>
+          <li>✅ Hotspot Reports</li>
+          <li>✅ Dedicated Support</li>
+        </ul>
+        <a href="register.html" class="btn btn-ghost" style="width:100%;">Contact Us</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ───────────────────────────────────────────────── -->
+<section style="padding:60px 0;background:rgba(0,212,170,0.03);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;z-index:1;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+      <div class="glass stat-card animate-on-scroll">
+        <div class="stat-number gradient-text">1.5L</div>
+        <div class="stat-label">Road deaths per year in India</div>
+      </div>
+      <div class="glass stat-card animate-on-scroll delay-1">
+        <div class="stat-number" style="color:var(--gold);">80%</div>
+        <div class="stat-label">Deaths preventable in golden hour</div>
+      </div>
+      <div class="glass stat-card animate-on-scroll delay-2">
+        <div class="stat-number" style="color:var(--red);">10s</div>
+        <div class="stat-label">Time to see full medical profile</div>
+      </div>
+      <div class="glass stat-card animate-on-scroll delay-3">
+        <div class="stat-number" style="color:var(--teal);">900%</div>
+        <div class="stat-label">Profit margin per unit (Business)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ───────────────────────────────────────────── -->
+<section class="section">
+  <div class="container-sm" style="text-align:center;">
+    <div class="glass-static" style="padding:60px 40px;" class="animate-on-scroll">
+      <div style="font-size:3rem;margin-bottom:16px;">🛡️</div>
+      <h2 class="display-font" style="font-size:2.4rem;font-weight:700;margin-bottom:12px;">
+        Be the <span class="gradient-text">1 in 1.5 Lakh</span> who survives.
+      </h2>
+      <p style="color:var(--text-secondary);margin-bottom:32px;font-size:1rem;">
+        Create your free SmartShield profile in under 2 minutes. No app download required.
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="register.html" class="btn btn-primary btn-lg">🛡️ Create My Shield — Free</a>
+        <a href="hotspot.html" class="btn btn-ghost btn-lg">🗺️ View Hotspot Map</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="padding:32px 24px;border-top:1px solid var(--border);text-align:center;color:var(--text-muted);font-size:0.85rem;position:relative;z-index:1;">
+  <div style="margin-bottom:8px;">
+    <span style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--text-secondary);">Sanjeevani Smart-Shield</span>
+    &nbsp;·&nbsp;
+    <a href="register.html" style="color:var(--teal);text-decoration:none;">Register</a> &nbsp;·&nbsp;
+    <a href="scan.html?demo=1" style="color:var(--teal);text-decoration:none;">Demo</a> &nbsp;·&nbsp;
+    <a href="hotspot.html" style="color:var(--teal);text-decoration:none;">Hotspot Map</a>
+  </div>
+  <div>Made for IDAA '26 · Detect. Connect. Protect. · ❤️ India</div>
+</footer>
+
+<script src="assets/js/app.js"></script>
+<script>
+  // Responsive hero grid
+  function layoutHero() {
+    const grid = document.getElementById('hero-grid');
+    const fGrid = document.getElementById('features-grid');
+    const stGrid = document.getElementById('steps-grid');
+    const tiers = document.querySelector('[style*="grid-template-columns:repeat(3"]');
+    const stats = document.querySelector('[style*="grid-template-columns:repeat(4"]');
+    if (window.innerWidth < 900) {
+      if(grid) grid.style.gridTemplateColumns = '1fr';
+      if(fGrid) fGrid.style.gridTemplateColumns = '1fr';
+      if(stGrid) { stGrid.style.gridTemplateColumns = '1fr 1fr'; stGrid.style.gap = '20px'; }
+    } else {
+      if(grid) grid.style.gridTemplateColumns = '1fr 1fr';
+      if(fGrid) fGrid.style.gridTemplateColumns = 'repeat(3,1fr)';
+      if(stGrid) stGrid.style.gridTemplateColumns = 'repeat(4,1fr)';
+    }
+    if (window.innerWidth < 600) {
+      if(stGrid) stGrid.style.gridTemplateColumns = '1fr';
+    }
+    // Show nav CTA + toggle on small screens
+    const navCta = document.getElementById('nav-cta');
+    const navToggle = document.getElementById('nav-toggle');
+    if (window.innerWidth < 900) {
+      if(navCta) navCta.style.display = 'inline-flex';
+      if(navToggle) navToggle.style.display = 'block';
+    }
+  }
+  layoutHero();
+  window.addEventListener('resize', layoutHero);
+</script>
+
+</body>
+</html>

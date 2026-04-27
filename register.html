@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Create your Sanjeevani Smart-Shield emergency medical profile and generate your QR code."/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="stylesheet" href="assets/css/main.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <title>Register — Sanjeevani Smart-Shield</title>
+  <style>
+    .blood-option {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: rgba(255,71,87,0.08);
+      border: 2px solid rgba(255,71,87,0.25);
+      color: var(--red);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .blood-option:hover, .blood-option.selected {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+      box-shadow: 0 4px 20px rgba(255,71,87,0.4);
+      transform: scale(1.1);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 52px; height: 28px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 28px;
+      transition: 0.3s;
+      border: 1px solid var(--border);
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      height: 20px; width: 20px;
+      left: 3px; bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    input:checked + .slider { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    input:checked + .slider::before { transform: translateX(24px); }
+
+    .preview-card {
+      background: linear-gradient(135deg, #0a1628, #0d1f3c);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,212,170,0.05);
+    }
+    .preview-header {
+      background: linear-gradient(135deg, rgba(0,212,170,0.12), rgba(0,166,136,0.06));
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(0,212,170,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .preview-body { padding: 20px; }
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 40px;
+    }
+    .step-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      background: var(--bg-dark);
+      color: var(--text-muted);
+      transition: var(--transition);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .step-dot.active { border-color: var(--teal); background: rgba(0,212,170,0.1); color: var(--teal); }
+    .step-dot.done   { border-color: #22c55e; background: rgba(34,197,94,0.15); color: #22c55e; }
+    .step-line { flex: 1; height: 2px; background: var(--border); }
+    .step-line.active { background: var(--teal); }
+
+    .section-heading {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    #qr-success {
+      text-align: center;
+      padding: 40px 24px;
+    }
+    #qr-container canvas, #qr-container img {
+      border-radius: 12px;
+      border: 3px solid rgba(0,212,170,0.2);
+      padding: 12px;
+      background: #040810;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-3"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🛡️</div>
+    <span class="gradient-text">Sanjeevani</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+    <li><a href="register.html" data-i18n="nav.register" class="active">Register</a></li>
+    <li><a href="dashboard.html" data-i18n="nav.dashboard">Dashboard</a></li>
+    <li><a href="hotspot.html" data-i18n="nav.hotspot">Hotspot Map</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="hi">हिं</button>
+    </div>
+  </div>
+</nav>
+
+<div style="padding-top:90px;min-height:100vh;position:relative;z-index:1;">
+  <div class="container" style="max-width:1100px;">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:40px;" class="animate-fade-up">
+      <span class="badge badge-teal" style="margin-bottom:12px;">Free Registration</span>
+      <h1 class="display-font" style="font-size:2.4rem;font-weight:800;margin-bottom:8px;" data-i18n="register.title">Create Your SmartShield Profile</h1>
+      <p style="color:var(--text-secondary);max-width:480px;margin:auto;font-size:0.95rem;">Your medical data is encrypted and stored securely. Fill once, protected forever.</p>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator animate-fade-up delay-1">
+      <div class="step-dot active" id="step-dot-1">1</div>
+      <div class="step-line" id="step-line-1"></div>
+      <div class="step-dot" id="step-dot-2">2</div>
+      <div class="step-line" id="step-line-2"></div>
+      <div class="step-dot" id="step-dot-3">3</div>
+    </div>
+
+    <!-- Two-Column Layout -->
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start;" id="reg-grid">
+
+      <!-- LEFT: FORM -->
+      <div>
+
+        <!-- Step 1: Personal Info -->
+        <div id="form-step-1" class="glass-static" style="padding:32px;margin-bottom:20px;">
+          <div class="section-heading">👤 Step 1 — Personal Information</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input class="form-input" type="text" id="field-name" placeholder="Akash Kumar" oninput="updatePreview()" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Age *</label>
+              <input class="form-input" type="number" id="field-age" placeholder="22" min="1" max="120" oninput="updatePreview()"/>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <select class="form-select" id="field-gender" onchange="updatePreview()">
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input class="form-input" type="tel" id="field-phone" placeholder="98765 43210" oninput="updatePreview()"/>
+            </div>
+          </div>
+
+          <!-- Blood Group -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="margin-bottom:12px;">Blood Group *</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;" id="blood-group-options">
+              <!-- Generated by JS -->
+            </div>
+            <input type="hidden" id="field-blood" value=""/>
+          </div>
+        </div>
+
+        <!-- Step 2: Medical Info -->
+        <div id="form-step-2" class="glass-static" style="padding:32px;margin-bottom:20px;">
+          <div class="section-heading">🩺 Step 2 — Medical Information</div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">⚠️ Allergies (comma separated)</label>
+            <input class="form-input" type="text" id="field-allergies" placeholder="Penicillin, Shellfish..." oninput="updatePreview()"/>
+          </div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">💊 Current Medications</label>
+            <input class="form-input" type="text" id="field-medications" placeholder="Metformin 500mg, Aspirin..." oninput="updatePreview()"/>
+          </div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">🫀 Medical Conditions</label>
+            <input class="form-input" type="text" id="field-conditions" placeholder="Type 2 Diabetes, Hypertension..." oninput="updatePreview()"/>
+          </div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">📋 Doctor's Notes / Extra Info</label>
+            <textarea class="form-textarea" id="field-notes" placeholder="Any special instructions for paramedics..." oninput="updatePreview()" style="min-height:80px;"></textarea>
+          </div>
+
+          <!-- Organ Donor Toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.15);border-radius:12px;">
+            <div>
+              <div style="font-weight:700;margin-bottom:2px;">💚 I am an Organ Donor</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Your badge helps hospitals make life-saving decisions.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="field-donor" onchange="updatePreview()"/>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 3: Emergency Contacts -->
+        <div id="form-step-3" class="glass-static" style="padding:32px;margin-bottom:24px;">
+          <div class="section-heading">📞 Step 3 — Emergency Contacts</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Contact 1 — Name</label>
+              <input class="form-input" type="text" id="field-ec1-name" placeholder="Raj Kumar (Father)" oninput="updatePreview()"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact 1 — Phone *</label>
+              <input class="form-input" type="tel" id="field-ec1" placeholder="98765 43210" oninput="updatePreview()" required/>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Contact 2 — Name</label>
+              <input class="form-input" type="text" id="field-ec2-name" placeholder="Priya Kumar (Sister)" oninput="updatePreview()"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact 2 — Phone</label>
+              <input class="form-input" type="tel" id="field-ec2" placeholder="91234 56789" oninput="updatePreview()"/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🏠 Home Address / City</label>
+            <input class="form-input" type="text" id="field-address" placeholder="Kanpur, Uttar Pradesh" oninput="updatePreview()"/>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button onclick="submitForm()" class="btn btn-primary btn-lg" style="width:100%;font-size:1.05rem;" id="submit-btn">
+          🛡️ <span data-i18n="register.save">Save & Generate QR Code</span>
+        </button>
+        <p style="color:var(--text-muted);font-size:0.78rem;text-align:center;margin-top:12px;">🔐 AES-256 encrypted · Stored securely on Firebase · QR sticker free</p>
+
+      </div>
+
+      <!-- RIGHT: LIVE PREVIEW CARD -->
+      <div style="position:sticky;top:90px;">
+        <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+          <span class="badge badge-teal">Live Preview</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);">Updates in real-time</span>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:1.1rem;">🛡️</span>
+              <span style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--teal);">Sanjeevani</span>
+            </div>
+            <span class="badge badge-red" style="font-size:0.65rem;">EMERGENCY</span>
+          </div>
+
+          <div class="preview-body">
+            <!-- Blood + Name -->
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+              <div class="blood-badge" id="prev-blood" style="width:52px;height:52px;font-size:1rem;">?</div>
+              <div>
+                <div style="font-weight:800;font-size:1.1rem;font-family:var(--font-display);" id="prev-name">Your Name</div>
+                <div style="color:var(--text-secondary);font-size:0.82rem;margin-top:2px;" id="prev-age-gender">Age · Gender</div>
+                <div style="margin-top:6px;" id="prev-badges"></div>
+              </div>
+            </div>
+
+            <!-- Info Grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:0.8rem;">
+              <div style="background:rgba(255,71,87,0.07);border:1px solid rgba(255,71,87,0.15);border-radius:10px;padding:10px;">
+                <div style="color:var(--text-muted);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">⚠️ Allergies</div>
+                <div style="color:var(--orange);font-weight:600;margin-top:3px;" id="prev-allergies">None</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;">
+                <div style="color:var(--text-muted);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">💊 Meds</div>
+                <div style="font-weight:600;margin-top:3px;" id="prev-meds">None</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;">
+                <div style="color:var(--text-muted);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">🫀 Conditions</div>
+                <div style="font-weight:600;margin-top:3px;" id="prev-conditions">None</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;">
+                <div style="color:var(--text-muted);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">📞 Contact</div>
+                <div style="font-weight:600;color:var(--teal);margin-top:3px;" id="prev-contact">–</div>
+              </div>
+            </div>
+
+            <!-- SOS Preview -->
+            <div style="background:linear-gradient(135deg,rgba(255,71,87,0.15),rgba(255,71,87,0.05));border:1px solid rgba(255,71,87,0.3);border-radius:10px;padding:12px;text-align:center;font-size:0.85rem;font-weight:700;color:var(--red);">
+              🚨 ONE-TAP SOS BUTTON
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Preview (post-submit) -->
+        <div id="qr-preview-section" class="hidden" style="margin-top:16px;">
+          <div class="preview-card" style="padding:24px;text-align:center;">
+            <div style="font-weight:700;margin-bottom:16px;font-family:var(--font-display);font-size:1.1rem;">Your SmartShield QR ✅</div>
+            <div id="qr-container" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="downloadQR()" class="btn btn-outline" style="flex:1;padding:10px;">⬇ Download</button>
+              <button onclick="shareQR()" class="btn btn-ghost" style="flex:1;padding:10px;">📤 Share</button>
+            </div>
+            <a id="scan-link" href="#" class="btn btn-primary" style="width:100%;margin-top:8px;padding:10px;">👁️ Test My Profile</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script>
+  // Blood Group Options
+  const BLOOD_GROUPS = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
+  const bloodGrid = document.getElementById('blood-group-options');
+  BLOOD_GROUPS.forEach(bg => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'blood-option';
+    btn.textContent = bg;
+    btn.onclick = () => selectBlood(bg, btn);
+    bloodGrid.appendChild(btn);
+  });
+
+  function selectBlood(bg, el) {
+    document.querySelectorAll('.blood-option').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('field-blood').value = bg;
+    updatePreview();
+  }
+
+  // Live Preview Update
+  function updatePreview() {
+    const name       = document.getElementById('field-name').value || 'Your Name';
+    const age        = document.getElementById('field-age').value;
+    const gender     = document.getElementById('field-gender').value;
+    const blood      = document.getElementById('field-blood').value || '?';
+    const allergies  = document.getElementById('field-allergies').value || 'None';
+    const meds       = document.getElementById('field-medications').value || 'None';
+    const conditions = document.getElementById('field-conditions').value || 'None';
+    const ec1Name    = document.getElementById('field-ec1-name').value;
+    const ec1        = document.getElementById('field-ec1').value;
+    const isDonor    = document.getElementById('field-donor').checked;
+
+    document.getElementById('prev-name').textContent = name;
+    document.getElementById('prev-blood').textContent = blood;
+    document.getElementById('prev-age-gender').textContent = [age ? `${age} yrs` : '', gender].filter(Boolean).join(' · ') || 'Age · Gender';
+    document.getElementById('prev-allergies').textContent = allergies;
+    document.getElementById('prev-meds').textContent = meds;
+    document.getElementById('prev-conditions').textContent = conditions;
+    document.getElementById('prev-contact').textContent = ec1Name ? `${ec1Name}` : (ec1 || '–');
+
+    const badges = document.getElementById('prev-badges');
+    badges.innerHTML = '';
+    if (isDonor) badges.innerHTML += '<span class="donor-badge" style="font-size:0.7rem;">💚 Organ Donor</span> ';
+    if (allergies && allergies !== 'None') badges.innerHTML += '<span class="badge badge-red" style="font-size:0.65rem;">⚠️ Allergic</span>';
+
+    // Step indicator
+    const hasStep1 = name !== 'Your Name' && blood !== '?';
+    const hasStep2 = allergies || meds || conditions;
+    const hasStep3 = ec1;
+    setStep(hasStep1 ? (hasStep2 ? (hasStep3 ? 3 : 2) : 1) : 0);
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById(`step-dot-${i}`);
+      dot.className = 'step-dot ' + (i < n+1 ? 'done' : (i === n+1 ? 'active' : ''));
+      if (i <= 2) {
+        const line = document.getElementById(`step-line-${i}`);
+        line.className = 'step-line ' + (i <= n ? 'active' : '');
+      }
+    }
+  }
+
+  // Form Submission
+  async function submitForm() {
+    const name   = document.getElementById('field-name').value.trim();
+    const blood  = document.getElementById('field-blood').value;
+    const ec1    = document.getElementById('field-ec1').value.trim();
+
+    if (!name || !blood || !ec1) {
+      Toast.error('Please fill: Name, Blood Group, and Emergency Contact.');
+      return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader" style="width:20px;height:20px;border-width:2px;filter:invert(1);"></span> Saving...';
+
+    const profile = {
+      id: `snj-${Date.now()}`,
+      name,
+      age:        document.getElementById('field-age').value,
+      gender:     document.getElementById('field-gender').value,
+      phone:      document.getElementById('field-phone').value,
+      blood_group: blood,
+      allergies:  document.getElementById('field-allergies').value,
+      medications: document.getElementById('field-medications').value,
+      conditions: document.getElementById('field-conditions').value,
+      notes:      document.getElementById('field-notes').value,
+      is_donor:   document.getElementById('field-donor').checked,
+      emergency_contact_name: document.getElementById('field-ec1-name').value,
+      emergency_contact:      ec1,
+      emergency_contact2_name: document.getElementById('field-ec2-name').value,
+      emergency_contact2:      document.getElementById('field-ec2').value,
+      address:    document.getElementById('field-address').value,
+      created_at: new Date().toISOString(),
+    };
+
+    await DB.saveProfile(profile);
+    const scanURL = QRManager.buildProfileURL(profile);
+
+    // Generate QR
+    document.getElementById('qr-preview-section').classList.remove('hidden');
+    QRManager.generate('qr-container', scanURL, { size: 180 });
+
+    const scanLink = document.getElementById('scan-link');
+    scanLink.href = scanURL;
+
+    Toast.success(`✅ Profile created! Your SmartShield QR is ready, ${name}!`, 6000);
+
+    btn.disabled = false;
+    btn.innerHTML = '✅ Profile Saved! Scroll down to download QR →';
+    btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+
+    // Scroll to QR
+    setTimeout(() => document.getElementById('qr-preview-section').scrollIntoView({ behavior: 'smooth' }), 500);
+  }
+
+  // Download QR
+  function downloadQR() {
+    const canvas = document.querySelector('#qr-container canvas');
+    const img    = document.querySelector('#qr-container img');
+
+    if (canvas) {
+      const a = document.createElement('a');
+      a.download = 'sanjeevani-qr.png';
+      a.href = canvas.toDataURL();
+      a.click();
+    } else if (img) {
+      const a = document.createElement('a');
+      a.download = 'sanjeevani-qr.png';
+      a.href = img.src;
+      a.click();
+    }
+    Toast.success('QR downloaded! Print and stick on your helmet.');
+  }
+
+  // Share QR link
+  async function shareQR() {
+    const link = document.getElementById('scan-link').href;
+    if (navigator.share) {
+      await navigator.share({ title: 'My Sanjeevani Emergency ID', url: link });
+    } else {
+      navigator.clipboard.writeText(link);
+      Toast.info('Link copied to clipboard!');
+    }
+  }
+
+  // Responsive grid
+  function layoutGrid() {
+    const grid = document.getElementById('reg-grid');
+    if (window.innerWidth < 900) grid.style.gridTemplateColumns = '1fr';
+    else grid.style.gridTemplateColumns = '1fr 380px';
+  }
+  layoutGrid();
+  window.addEventListener('resize', layoutGrid);
+</script>
+</body>
+</html>

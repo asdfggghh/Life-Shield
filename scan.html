@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Sanjeevani Emergency Medical ID — Critical patient information for first responders."/>
+  <meta name="theme-color" content="#ff4757"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="stylesheet" href="assets/css/main.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>🚨 Emergency Medical ID — Sanjeevani</title>
+  <style>
+    body { background: #040810; }
+
+    .emergency-banner {
+      background: linear-gradient(135deg, rgba(255,71,87,0.15), rgba(255,71,87,0.05));
+      border: 1px solid rgba(255,71,87,0.4);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      animation: pulse-border 2s infinite;
+    }
+    @keyframes pulse-border {
+      0%,100% { border-color: rgba(255,71,87,0.4); box-shadow: 0 0 0 0 rgba(255,71,87,0.1); }
+      50%      { border-color: rgba(255,71,87,0.8); box-shadow: 0 0 20px rgba(255,71,87,0.15); }
+    }
+
+    .info-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 16px 18px;
+      transition: var(--transition);
+    }
+    .info-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(0,212,170,0.2); }
+
+    .info-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .info-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .hospital-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      text-decoration: none;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .hospital-item:hover {
+      background: rgba(0,212,170,0.06);
+      border-color: rgba(0,212,170,0.3);
+      transform: translateX(4px);
+    }
+
+    .big-sos {
+      position: relative;
+      width: 100%;
+      padding: 22px;
+      background: linear-gradient(135deg, #ff4757, #c0392b);
+      border: none;
+      border-radius: 18px;
+      color: #fff;
+      font-size: 1.3rem;
+      font-weight: 800;
+      font-family: var(--font-display);
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 40px rgba(255,71,87,0.45);
+      transition: var(--transition);
+      overflow: hidden;
+    }
+    .big-sos::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #ff4757, #ff8c42, #ff4757);
+      z-index: -1;
+      animation: spin-slow 3s linear infinite;
+    }
+    .big-sos:hover { transform: scale(1.02); box-shadow: 0 12px 50px rgba(255,71,87,0.6); }
+    .big-sos:active { transform: scale(0.98); }
+    .big-sos:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    .ai-chat-bubble {
+      background: rgba(0,212,170,0.06);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 14px 14px 14px 4px;
+      padding: 14px 16px;
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      position: relative;
+    }
+    .ai-chat-bubble::before {
+      content: '🤖 Sanjeevani AI';
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 6px;
+    }
+
+    .quick-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    .quick-action:hover {
+      background: rgba(0,212,170,0.07);
+      border-color: rgba(0,212,170,0.3);
+      transform: translateY(-3px);
+    }
+    .quick-action .qa-icon { font-size: 1.6rem; }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: var(--transition);
+    }
+    .tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+    .ai-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition);
+    }
+    .ai-input:focus { border-color: var(--teal); background: rgba(0,212,170,0.04); }
+
+    #sos-confirm-overlay {
+      position: fixed; inset: 0; z-index: 9998;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #sos-confirm-overlay.hidden { display: none; }
+
+    .gps-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--teal);
+      animation: pulse-teal 1.5s infinite;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<!-- SOS Confirm Overlay -->
+<div id="sos-confirm-overlay" class="hidden">
+  <div class="glass-static" style="max-width:360px;width:100%;padding:32px;text-align:center;border-color:rgba(255,71,87,0.4);">
+    <div style="font-size:3rem;margin-bottom:12px;">🚨</div>
+    <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:8px;" class="display-font">Confirm SOS Alert?</h2>
+    <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:24px;" id="confirm-msg">
+      This will immediately SMS <strong id="contact-name-confirm">emergency contact</strong> and share your GPS location.
+    </p>
+    <div style="display:flex;gap:12px;">
+      <button onclick="document.getElementById('sos-confirm-overlay').classList.add('hidden')" class="btn btn-ghost" style="flex:1;">Cancel</button>
+      <button onclick="confirmSOS()" class="btn btn-danger" style="flex:1;" id="confirm-sos-btn">Yes, Send SOS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sticky Top Bar -->
+<div style="position:sticky;top:0;z-index:100;background:rgba(4,8,16,0.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,71,87,0.2);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse-red 1s infinite;"></div>
+    <span style="font-size:0.8rem;font-weight:700;color:var(--red);letter-spacing:.06em;">EMERGENCY MODE</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="lang-toggle" style="transform:scale(0.85);transform-origin:right;">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="hi">हिं</button>
+    </div>
+    <a href="index.html" style="color:var(--text-muted);font-size:0.8rem;text-decoration:none;">🏠 Home</a>
+  </div>
+</div>
+
+<div style="max-width:480px;margin:0 auto;padding:20px 16px 40px;" id="main-content">
+
+  <!-- Loading State -->
+  <div id="loading-state" style="text-align:center;padding:60px 20px;">
+    <div class="loader" style="margin:0 auto 20px;"></div>
+    <p style="color:var(--text-secondary);">Loading medical profile...</p>
+    <p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px;">Fetching GPS location...</p>
+  </div>
+
+  <!-- Main Profile (hidden until loaded) -->
+  <div id="profile-view" class="hidden">
+
+    <!-- Emergency Banner -->
+    <div class="emergency-banner" style="margin-bottom:20px;">
+      <div style="font-size:2rem;flex-shrink:0;">⚠️</div>
+      <div>
+        <div style="font-weight:800;font-size:0.95rem;color:var(--red);" data-i18n="scan.title">Emergency Medical ID</div>
+        <div style="font-size:0.82rem;color:var(--text-secondary);margin-top:2px;" data-i18n="scan.subtitle">This person has been in an accident. Please help them.</div>
+      </div>
+    </div>
+
+    <!-- Patient Header -->
+    <div class="glass-static" style="padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;border-color:rgba(0,212,170,0.15);">
+      <div class="blood-badge" id="blood-display">A+</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:1.3rem;font-weight:800;font-family:var(--font-display);" id="name-display">–</div>
+        <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:2px;" id="age-gender-display">–</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;" id="badges-row">
+          <!-- Donor badge injected here if applicable -->
+        </div>
+      </div>
+      <button onclick="speakProfile()" style="background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:12px;padding:10px;cursor:pointer;color:var(--teal);font-size:1.4rem;" title="Listen in voice" id="voice-btn">🔊</button>
+    </div>
+
+    <!-- GPS Status -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.15);border-radius:12px;">
+      <div class="gps-dot"></div>
+      <span style="font-size:0.82rem;color:var(--teal);" id="gps-status">Fetching GPS location...</span>
+      <a id="maps-link" href="#" target="_blank" style="margin-left:auto;font-size:0.78rem;color:var(--text-muted);text-decoration:none;display:none;">Open Maps ↗</a>
+    </div>
+
+    <!-- Info Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div class="info-card">
+        <div class="info-label">⚠️ Allergies</div>
+        <div class="info-value" id="allergy-display" style="color:var(--orange);">None</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">💊 Medications</div>
+        <div class="info-value" id="medication-display">None</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">🫀 Conditions</div>
+        <div class="info-value" id="condition-display">None</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">📋 Notes</div>
+        <div class="info-value" id="notes-display" style="font-size:0.88rem;color:var(--text-secondary);">–</div>
+      </div>
+    </div>
+
+    <!-- SOS Button -->
+    <button class="big-sos" id="sos-btn" onclick="initiateSOS()" style="margin-bottom:16px;">
+      <span>🚨</span>
+      <span data-i18n="sos.button">SEND SOS ALERT</span>
+    </button>
+
+    <!-- SOS Result -->
+    <div id="sos-result" class="hidden" style="padding:14px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:12px;color:#22c55e;font-weight:600;font-size:0.9rem;text-align:center;margin-bottom:16px;"></div>
+
+    <!-- Quick Actions -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
+      <a class="quick-action" href="tel:108">
+        <span class="qa-icon">🚑</span>
+        <span>Ambulance<br>108</span>
+      </a>
+      <a class="quick-action" href="tel:112">
+        <span class="qa-icon">🚔</span>
+        <span>Police<br>112</span>
+      </a>
+      <a class="quick-action" id="call-contact-btn" href="#">
+        <span class="qa-icon">📞</span>
+        <span>Call<br>Family</span>
+      </a>
+      <a class="quick-action" id="nearest-hospital-btn" href="#hospitals-section">
+        <span class="qa-icon">🏥</span>
+        <span>Hospital<br>Nearby</span>
+      </a>
+    </div>
+
+    <!-- Tabs: Hospitals | AI | e-RaktKosh -->
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;">
+      <button class="tab-btn active" onclick="switchTab('hospitals')">🏥 Hospitals</button>
+      <button class="tab-btn" onclick="switchTab('ai')">🤖 AI Guide</button>
+      <button class="tab-btn" onclick="switchTab('blood')">🩸 Blood Bank</button>
+    </div>
+
+    <!-- Tab: Hospitals -->
+    <div id="tab-hospitals" id="hospitals-section">
+      <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:12px;" id="hospital-status">Finding nearest trauma centers...</p>
+      <div id="hospitals-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <!-- Tab: AI Guide -->
+    <div id="tab-ai" class="hidden">
+      <div class="ai-chat-bubble" style="margin-bottom:16px;" id="ai-response">
+        Ask me anything about first aid for this patient.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button onclick="askAI('What should I do first?')" style="padding:8px 12px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:100px;color:var(--teal);font-size:0.78rem;cursor:pointer;">What to do first?</button>
+        <button onclick="askAI('Is the patient breathing?')" style="padding:8px 12px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:100px;color:var(--teal);font-size:0.78rem;cursor:pointer;">Check breathing?</button>
+        <button onclick="askAI('How to stop bleeding?')" style="padding:8px 12px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:100px;color:var(--teal);font-size:0.78rem;cursor:pointer;">Stop bleeding?</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input class="ai-input" id="ai-query" type="text" placeholder="Ask anything about first aid..." onkeydown="if(event.key==='Enter')askAI()"/>
+        <button onclick="askAI()" style="padding:14px 18px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));border:none;border-radius:12px;color:#000;font-weight:700;cursor:pointer;">→</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.75rem;margin-top:8px;">⚡ Powered by Gemini AI. Always call 108 first.</p>
+    </div>
+
+    <!-- Tab: Blood Bank -->
+    <div id="tab-blood" class="hidden">
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:2.5rem;margin-bottom:8px;">🩸</div>
+        <div style="font-weight:700;margin-bottom:4px;" id="bloodbank-type">Blood Group: A+</div>
+        <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:20px;">Live stock from e-RaktKosh API</p>
+        <div id="bloodbank-list" style="display:flex;flex-direction:column;gap:8px;text-align:left;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script>
+  // ── Config ───────────────────────────────────────────────
+  const GOOGLE_MAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'; // Replace in production
+  const GEMINI_KEY      = 'YOUR_GEMINI_API_KEY';       // Replace in production
+
+  let currentProfile = null;
+  let currentLocation = null;
+
+  // ── Init ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadProfile();
+    await fetchGPS();
+    loadHospitals();
+    logScanEvent();
+    if (currentProfile?.blood_group) loadBloodBank(currentProfile.blood_group);
+  });
+
+  // ── Load Profile ─────────────────────────────────────────
+  async function loadProfile() {
+    const params = new URLSearchParams(window.location.search);
+
+    // 1. URL-encoded profile (from QR)
+    const encoded = params.get('d');
+    if (encoded) {
+      try {
+        currentProfile = JSON.parse(atob(encoded));
+      } catch(e) { console.warn('URL decode error:', e); }
+    }
+
+    // 2. Demo mode
+    if (params.get('demo') === '1') {
+      currentProfile = DEMO_PROFILE;
+    }
+
+    // 3. Fallback to saved profile
+    if (!currentProfile) {
+      currentProfile = await DB.getCurrentProfile();
+    }
+
+    if (currentProfile) {
+      renderProfile(currentProfile);
+    } else {
+      renderNoProfile();
+    }
+  }
+
+  const DEMO_PROFILE = {
+    name: 'Akash Kumar',
+    age: 22,
+    gender: 'Male',
+    blood_group: 'A+',
+    allergies: 'Penicillin',
+    medications: 'None',
+    conditions: 'None',
+    notes: 'Helmet worn. Diabetic check not required.',
+    is_donor: true,
+    emergency_contact_name: 'Raj Kumar (Father)',
+    emergency_contact: '9876543210',
+    emergency_contact2: '9123456789',
+    id: 'demo-001'
+  };
+
+  function renderProfile(p) {
+    document.getElementById('name-display').textContent = p.name || '–';
+    document.getElementById('blood-display').textContent = p.blood_group || '?';
+    document.getElementById('age-gender-display').textContent =
+      [p.age ? `${p.age} yrs` : '', p.gender].filter(Boolean).join(' · ');
+
+    document.getElementById('allergy-display').textContent  = p.allergies  || 'None';
+    document.getElementById('medication-display').textContent = p.medications || 'None';
+    document.getElementById('condition-display').textContent  = p.conditions || 'None';
+    document.getElementById('notes-display').textContent     = p.notes || '–';
+
+    // badges
+    const row = document.getElementById('badges-row');
+    if (p.is_donor) row.innerHTML += `<span class="donor-badge">💚 Organ Donor</span>`;
+    if (p.allergies && p.allergies !== 'None') row.innerHTML += `<span class="badge badge-red">⚠️ Allergic</span>`;
+
+    // call btn
+    const callBtn = document.getElementById('call-contact-btn');
+    if (p.emergency_contact) callBtn.href = `tel:${p.emergency_contact}`;
+
+    // confirm msg
+    document.getElementById('contact-name-confirm').textContent =
+      p.emergency_contact_name || 'emergency contact';
+
+    // blood bank
+    document.getElementById('bloodbank-type').textContent = `Blood Group: ${p.blood_group || '?'}`;
+
+    // hide loader, show profile
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('profile-view').classList.remove('hidden');
+
+    // Auto voice after 1.5s
+    setTimeout(() => speakProfile(), 1500);
+  }
+
+  function renderNoProfile() {
+    document.getElementById('loading-state').innerHTML = `
+      <div style="font-size:2.5rem;margin-bottom:12px;">⚠️</div>
+      <h2 style="font-weight:700;margin-bottom:8px;">No Profile Found</h2>
+      <p style="color:var(--text-secondary);margin-bottom:20px;font-size:0.9rem;">This QR code has no linked medical profile.</p>
+      <a href="register.html" class="btn btn-primary">Create Profile Now</a>
+      <br><br>
+      <a href="scan.html?demo=1" style="color:var(--teal);text-decoration:none;font-size:0.85rem;">View Demo Profile →</a>`;
+  }
+
+  // ── GPS ────────────────────────────────────────────────
+  async function fetchGPS() {
+    const el = document.getElementById('gps-status');
+    try {
+      currentLocation = await LocationManager.get();
+      el.textContent = `📍 Location fetched (±${Math.round(currentLocation.accuracy)}m)`;
+      const link = document.getElementById('maps-link');
+      link.href = await LocationManager.getMapsLink(currentLocation.lat, currentLocation.lng);
+      link.style.display = 'inline';
+    } catch(e) {
+      el.textContent = '📡 GPS unavailable — SOS will send without location';
+      el.style.color = 'var(--orange)';
+    }
+  }
+
+  async function logScanEvent() {
+    if (!currentProfile) return;
+    if (currentLocation) {
+      await DB.logScan(currentLocation.lat, currentLocation.lng, currentProfile.id);
+    }
+  }
+
+  // ── SOS ───────────────────────────────────────────────
+  function initiateSOS() {
+    document.getElementById('sos-confirm-overlay').classList.remove('hidden');
+  }
+
+  async function confirmSOS() {
+    const btn = document.getElementById('confirm-sos-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    document.getElementById('sos-confirm-overlay').classList.add('hidden');
+
+    const sosBtn = document.getElementById('sos-btn');
+    sosBtn.disabled = true;
+    sosBtn.innerHTML = '<span class="loader" style="width:24px;height:24px;border-width:3px;margin:0 auto;filter:invert(1);"></span>';
+
+    const result = await SOSManager.trigger(currentProfile, currentLocation);
+
+    document.getElementById('sos-result').classList.remove('hidden');
+    if (result.status === 'sent') {
+      document.getElementById('sos-result').textContent = lang.t('sos.sent');
+      Toast.success(lang.t('sos.sent'));
+    } else {
+      document.getElementById('sos-result').textContent = lang.t('sos.offline');
+      document.getElementById('sos-result').style.background = 'rgba(255,140,66,0.1)';
+      document.getElementById('sos-result').style.borderColor = 'rgba(255,140,66,0.3)';
+      document.getElementById('sos-result').style.color = 'var(--orange)';
+      Toast.warning(lang.t('sos.offline'));
+    }
+
+    sosBtn.disabled = false;
+    sosBtn.innerHTML = '✅ SOS Sent — Click again to resend';
+    btn.disabled = false;
+    btn.textContent = 'Yes, Send SOS';
+  }
+
+  // ── Voice ──────────────────────────────────────────────
+  function speakProfile() {
+    if (!currentProfile) return;
+    VoiceAssistant.guideFirstAid(currentProfile);
+    document.getElementById('voice-btn').textContent = '🔇';
+    setTimeout(() => document.getElementById('voice-btn').textContent = '🔊', 15000);
+  }
+
+  // ── Hospitals ──────────────────────────────────────────
+  async function loadHospitals() {
+    const list = document.getElementById('hospitals-list');
+    const status = document.getElementById('hospital-status');
+    status.textContent = lang.t('hospital.finding');
+
+    let hospitals = [];
+    if (currentLocation) {
+      hospitals = await LocationManager.getNearestHospitals(currentLocation.lat, currentLocation.lng, GOOGLE_MAPS_KEY);
+    } else {
+      hospitals = MOCK_HOSPITALS(28.6, 77.2);
+    }
+
+    status.textContent = lang.t('hospital.found');
+    list.innerHTML = '';
+
+    hospitals.slice(0, 5).forEach((h, i) => {
+      const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name)}`;
+      const div = document.createElement('a');
+      div.className = 'hospital-item';
+      div.href = mapsLink;
+      div.target = '_blank';
+      div.innerHTML = `
+        <div style="width:40px;height:40px;background:rgba(59,130,246,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🏥</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${h.name}</div>
+          <div style="color:var(--text-muted);font-size:0.78rem;margin-top:2px;">${h.vicinity}</div>
+        </div>
+        <div style="color:var(--teal);font-size:0.8rem;font-weight:700;">→</div>`;
+      list.appendChild(div);
+    });
+
+    document.getElementById('nearest-hospital-btn').href =
+      hospitals[0] ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hospitals[0].name)}` : '#hospitals-section';
+    document.getElementById('nearest-hospital-btn').target = '_blank';
+  }
+
+  // ── Tabs ──────────────────────────────────────────────
+  function switchTab(name) {
+    ['hospitals','ai','blood'].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== name);
+    });
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', ['hospitals','ai','blood'][i] === name);
+    });
+  }
+
+  // ── AI First Aid ───────────────────────────────────────
+  const FIRST_AID_GUIDE = {
+    'What should I do first?': 'Step 1: Call 108 immediately.\nStep 2: Do NOT move the patient unless they are in immediate danger (fire, drowning).\nStep 3: Check if they are conscious — ask loudly "Can you hear me?"\nStep 4: Check breathing by looking at chest movement.\nStep 5: Keep them warm and calm until help arrives.',
+    'Is the patient breathing?': 'To check breathing:\n1. Tilt head back gently, lift chin.\n2. Look for chest rising.\n3. Listen for breath sounds.\n4. Feel air on your cheek.\nIf NOT breathing and trained in CPR: Start 30 chest compressions, then 2 rescue breaths. Repeat until ambulance arrives.',
+    'How to stop bleeding?': 'To stop bleeding:\n1. Apply firm, direct pressure with a clean cloth.\n2. Do NOT remove the cloth — add more on top if it soaks through.\n3. Elevate the injured limb above heart level if possible.\n4. For severe limb bleeding: apply a tourniquet 5cm above wound.\n5. Keep pressing until ambulance arrives.',
+  };
+
+  async function askAI(question) {
+    const input = document.getElementById('ai-query');
+    const q = question || input.value.trim();
+    if (!q) return;
+
+    const response = document.getElementById('ai-response');
+    response.innerHTML = '<span style="color:var(--teal);">🤖 Sanjeevani AI</span><br>Thinking...';
+    input.value = '';
+
+    // Check local guide first
+    const localAnswer = FIRST_AID_GUIDE[q];
+    if (localAnswer) {
+      await new Promise(r => setTimeout(r, 600));
+      response.innerHTML = `<span style="color:var(--teal);font-size:0.75rem;font-weight:700;display:block;margin-bottom:6px;">🤖 Sanjeevani AI</span>${localAnswer.replace(/\n/g, '<br>')}`;
+      return;
+    }
+
+    // Try Gemini API
+    try {
+      const profileContext = currentProfile
+        ? `Patient: ${currentProfile.name}, ${currentProfile.age}yo ${currentProfile.gender}, Blood: ${currentProfile.blood_group}, Allergies: ${currentProfile.allergies}, Conditions: ${currentProfile.conditions}.`
+        : 'Patient profile not available.';
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: `You are an emergency first aid AI. ${profileContext} The bystander asks: "${q}". Give a short, clear, step-by-step answer in ${lang.current === 'hi' ? 'Hindi' : 'English'}. Keep it under 100 words.` }]
+          }]
+        })
+      });
+      const data = await res.json();
+      const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to get response. Please call 108 immediately.';
+      response.innerHTML = `<span style="color:var(--teal);font-size:0.75rem;font-weight:700;display:block;margin-bottom:6px;">🤖 Sanjeevani AI</span>${answer}`;
+    } catch {
+      response.innerHTML = `<span style="color:var(--teal);font-size:0.75rem;font-weight:700;display:block;margin-bottom:6px;">🤖 Sanjeevani AI</span>⚠️ Offline mode — Please call 108 immediately. Keep the patient still, warm, and conscious.`;
+    }
+  }
+
+  // ── Blood Bank (mock e-RaktKosh) ───────────────────────
+  function loadBloodBank(bloodGroup) {
+    const mock = [
+      { bank: 'Hancock Hospital Blood Bank',  stock: 'Available', units: 8,  dist: '1.8 km' },
+      { bank: 'GSVM Blood Center',            stock: 'Low',       units: 2,  dist: '3.2 km' },
+      { bank: 'Red Cross Kanpur',             stock: 'Available', units: 14, dist: '4.5 km' },
+    ];
+
+    const list = document.getElementById('bloodbank-list');
+    list.innerHTML = mock.map(b => `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;">
+        <div style="font-size:1.3rem;">🩸</div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:0.88rem;">${b.bank}</div>
+          <div style="color:var(--text-muted);font-size:0.78rem;">${b.dist} · ${b.units} units</div>
+        </div>
+        <span class="badge ${b.stock === 'Available' ? 'badge-green' : 'badge-red'}">${b.stock}</span>
+      </div>`).join('');
+  }
+</script>
+</body>
+</html>

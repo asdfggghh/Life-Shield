@@ -1,0 +1,40 @@
+{
+  "name": "Sanjeevani Smart-Shield",
+  "short_name": "Sanjeevani",
+  "description": "Emergency Medical ID System — Detect, Connect, Protect",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0a0f1e",
+  "theme_color": "#00d4aa",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "emergency"],
+  "lang": "en-IN",
+  "shortcuts": [
+    {
+      "name": "SOS Emergency",
+      "short_name": "SOS",
+      "url": "/scan.html",
+      "description": "Open Emergency Medical ID"
+    },
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "url": "/dashboard.html",
+      "description": "Manage your profile"
+    }
+  ]
+}
